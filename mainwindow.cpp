@@ -34,6 +34,7 @@ void MainWindow::setupUI()
     
     // 创建效果选择下拉框
     m_effectComboBox = new QComboBox(this);
+    m_effectComboBox->setStyleSheet("QComboBox { background-color: rgba(255, 255, 255, 0.1); }");
     setupEffectOptions();
     mainLayout->addWidget(m_effectComboBox);
     
@@ -43,6 +44,24 @@ void MainWindow::setupUI()
     // 连接信号
     connect(m_effectComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &MainWindow::onEffectChanged);
+
+    // 为所有控件设置样式，确保在模糊背景上可见
+    QString styleSheet = R"(
+        QLabel {
+            color: rgba(0, 0, 0, 200);
+            background-color: transparent;
+        }
+        QComboBox {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: rgba(0, 0, 0, 200);
+            border: 1px solid rgba(0, 0, 0, 60);
+            border-radius: 4px;
+            padding: 2px;
+        }
+    )";
+
+
+    centralWidget->setStyleSheet(styleSheet);
 }
 
 void MainWindow::setupEffectOptions()
@@ -69,7 +88,6 @@ void MainWindow::setupEffectOptions()
 #ifdef Q_OS_MACOS
     m_effectComboBox->addItem(tr("模糊"), BackdropEffect::Blur);
 #endif
-    m_effectComboBox->addItem(tr("Qt默认"),BackdropEffect::Default);
 
     // 设置当前选项为当前效果
     int currentIndex = m_effectComboBox->findData(currentEffect());

@@ -35,7 +35,7 @@ void NMainWindow::initWindow()
 {
     // 初始化平台特定效果
     initPlatformEffect();
-    
+
     // 设置默认效果
     setBackdropEffect(getDefaultEffect());
 }
@@ -54,35 +54,16 @@ void NMainWindow::initPlatformEffect()
 bool NMainWindow::setBackdropEffect(int effectType)
 {
     bool success = setPlatformEffect(effectType);
-    
+
     if (success) {
         m_currentEffect = effectType;
     }
-    
+
     return success;
 }
 
 bool NMainWindow::setPlatformEffect(int type)
 {
-    // 如果是默认样式，恢复Qt原生样式
-    if (type == BackdropEffect::Default) {
-        // 移除所有自定义效果
-#ifdef Q_OS_WIN
-        WindowsEffect::setWindowBackdropEffect(this, WindowsEffect::BackdropType::None);
-#endif
-
-#ifdef Q_OS_MACOS
-        MacOSEffect::setWindowBackdropEffect(this, MacOSEffect::None);
-#endif
-
-        // 移除透明背景属性
-        this->setAttribute(Qt::WA_TranslucentBackground, false);
-        this->setStyleSheet("");  // 清除样式表
-        
-        return true;
-    }
-    
-    // 其余代码保持不变
 #ifdef Q_OS_WIN
     return WindowsEffect::setWindowBackdropEffect(this, type);
 #endif
@@ -131,7 +112,7 @@ void NMainWindow::enableWindowAnimation(bool enable) {
 #ifdef Q_OS_WIN
     HWND hwnd = reinterpret_cast<HWND>(this->winId());
     DWORD style = GetWindowLong(hwnd, GWL_STYLE);
-    
+
     if (!enable) {
         style &= ~WS_CAPTION;
         style &= ~WS_THICKFRAME;
@@ -139,7 +120,7 @@ void NMainWindow::enableWindowAnimation(bool enable) {
         style |= WS_CAPTION;
         style |= WS_THICKFRAME;
     }
-    
+
     SetWindowLong(hwnd, GWL_STYLE, style);
 #endif
 

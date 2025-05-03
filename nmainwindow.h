@@ -9,8 +9,7 @@ enum Type {
     Blur = 1,       // 模糊效果 (macOS)
     Mica = 2,       // Mica效果 (Windows 11)
     Acrylic = 3,    // 亚克力效果 (Windows 10/11)
-    Tabbed = 4,     // 标签式效果 (Windows 11)
-    Default = 5     // Qt默认样式
+    Tabbed = 4      // 标签式效果 (Windows 11)
 };
 }
 

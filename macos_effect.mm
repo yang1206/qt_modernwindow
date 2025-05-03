@@ -2,6 +2,7 @@
 #include <AppKit/AppKit.h>
 #include <Cocoa/Cocoa.h>
 #include <QWidget>
+#include <QOperatingSystemVersion>
 
 void MacOSEffect::initWindowEffect(QWidget* window) {
     // 设置窗口背景透明
@@ -67,6 +68,25 @@ bool MacOSEffect::setWindowBackdropEffect(QWidget* window, int type) {
             
             // 将模糊视图放在底层
             [nsView addSubview:blurView positioned:NSWindowBelow relativeTo:nil];
+
+            // 在全屏监听中完全隐藏模糊效果
+            [[NSNotificationCenter defaultCenter] addObserverForName:NSWindowWillEnterFullScreenNotification
+                                                            object:nsWindow
+                                                             queue:[NSOperationQueue mainQueue]
+                                                        usingBlock:^(NSNotification *notification) {
+                // 全屏前隐藏模糊效果
+                [blurView setHidden:YES];
+            }];
+
+            // 退出全屏时恢复
+            [[NSNotificationCenter defaultCenter] addObserverForName:NSWindowDidExitFullScreenNotification
+                                                            object:nsWindow
+                                                             queue:[NSOperationQueue mainQueue]
+                                                        usingBlock:^(NSNotification *notification) {
+                // 退出全屏后显示模糊效果
+                [blurView setHidden:NO];
+            }];
+
             return true;
         }
 
@@ -91,25 +111,23 @@ void MacOSEffect::setWindowCornerRadius(QWidget* window, qreal radius) {
         return;
     }
     
-    // 设置窗口圆角
-    nsWindow.appearance = [NSAppearance currentAppearance];
+    // 确保窗口不透明属性设置正确
+    [nsWindow setOpaque:NO];
     
-    // 使用运行时机制检查方法是否可用
-    SEL cornerMaskSelector = NSSelectorFromString(@"setCornerMask:");
-    SEL cornerRadiusSelector = NSSelectorFromString(@"setCornerRadius:");
+    // 使用Qt方式检查macOS版本
+    bool isMacOS11OrGreater = QOperatingSystemVersion::current() >=
+                             QOperatingSystemVersion(QOperatingSystemVersion::MacOS, 11, 0);
     
-    if ([nsWindow respondsToSelector:cornerMaskSelector] && 
-        [nsWindow respondsToSelector:cornerRadiusSelector]) {
-        // macOS 11及以上版本支持的方法
-        NSInteger cornerMaskValue = 7; // NSWindowRoundedCornersMask
-        NSNumber *maskValue = [NSNumber numberWithInteger:cornerMaskValue];
-        NSNumber *radiusValue = [NSNumber numberWithDouble:radius];
-        
-        [nsWindow performSelector:cornerMaskSelector withObject:maskValue];
-        [nsWindow performSelector:cornerRadiusSelector withObject:radiusValue];
+    if (isMacOS11OrGreater) {
+        // 使用运行时机制设置圆角
+        SEL cornerRadiusSelector = NSSelectorFromString(@"setCornerRadius:");
+        if ([nsWindow respondsToSelector:cornerRadiusSelector]) {
+            // 转换double为NSNumber
+            NSNumber *radiusValue = [NSNumber numberWithDouble:radius];
+            [nsWindow performSelector:cornerRadiusSelector withObject:radiusValue];
+        }
     } else {
-        // 对于较早版本，可以通过layer设置圆角
-        [nsWindow setOpaque:NO];
+        // 对于旧版macOS，通过layer设置圆角
         nsView.wantsLayer = YES;
         nsView.layer.cornerRadius = radius;
         nsView.layer.masksToBounds = YES;
@@ -127,30 +145,47 @@ void MacOSEffect::addWindowShadowEffect(QWidget* window, qreal shadowRadius) {
         return;
     }
     
+    // 启用窗口阴影
     [nsWindow setHasShadow:YES];
     
-    // macOS 10.14+支持的方法
-    SEL roundedCornersSelector = NSSelectorFromString(@"setShadowsHaveRoundedCorners:");
-    if ([nsWindow respondsToSelector:roundedCornersSelector]) {
-        NSNumber *yesValue = [NSNumber numberWithBool:YES];
-        [nsWindow performSelector:roundedCornersSelector withObject:yesValue];
-    }
+    // 设置窗口可由背景移动
+    [nsWindow setMovableByWindowBackground:YES];
     
-    // 设置内容边框厚度（用于阴影）
-    SEL borderThicknessSelector = NSSelectorFromString(@"setContentBorderThickness:forEdge:");
-    if ([nsWindow respondsToSelector:borderThicknessSelector]) {
-        // 转换参数类型
-        NSNumber *thicknessValue = [NSNumber numberWithDouble:shadowRadius];
-        NSNumber *edgeBottom = [NSNumber numberWithInteger:0]; // NSRectEdgeBottom
-        NSNumber *edgeLeft = [NSNumber numberWithInteger:1];   // NSRectEdgeLeft
-        NSNumber *edgeRight = [NSNumber numberWithInteger:2];  // NSRectEdgeRight
-        NSNumber *edgeTop = [NSNumber numberWithInteger:3];    // NSRectEdgeTop
+    // 通过CALayer设置阴影参数
+    if (shadowRadius > 0) {
+        nsView.wantsLayer = YES;
         
-        // 对每个边缘调用方法
-        [nsWindow performSelector:borderThicknessSelector withObject:thicknessValue withObject:edgeBottom];
-        [nsWindow performSelector:borderThicknessSelector withObject:thicknessValue withObject:edgeLeft];
-        [nsWindow performSelector:borderThicknessSelector withObject:thicknessValue withObject:edgeRight];
-        [nsWindow performSelector:borderThicknessSelector withObject:thicknessValue withObject:edgeTop];
+        // 使用运行时方式访问CALayer属性
+        id layer = nsWindow.contentView.layer;
+        
+        // 设置阴影不透明度
+        SEL shadowOpacitySelector = NSSelectorFromString(@"setShadowOpacity:");
+        if ([layer respondsToSelector:shadowOpacitySelector]) {
+            NSNumber *opacityValue = [NSNumber numberWithFloat:0.4];
+            [layer performSelector:shadowOpacitySelector withObject:opacityValue];
+        }
+        
+        // 设置阴影颜色
+        SEL shadowColorSelector = NSSelectorFromString(@"setShadowColor:");
+        if ([layer respondsToSelector:shadowColorSelector]) {
+            CGColorRef blackColor = CGColorCreateGenericRGB(0, 0, 0, 1.0);
+            [layer performSelector:shadowColorSelector withObject:(__bridge id)blackColor];
+            CGColorRelease(blackColor);
+        }
+        
+        // 设置阴影半径
+        SEL shadowRadiusSelector = NSSelectorFromString(@"setShadowRadius:");
+        if ([layer respondsToSelector:shadowRadiusSelector]) {
+            NSNumber *radiusValue = [NSNumber numberWithDouble:shadowRadius];
+            [layer performSelector:shadowRadiusSelector withObject:radiusValue];
+        }
+        
+        // 设置阴影偏移
+        SEL shadowOffsetSelector = NSSelectorFromString(@"setShadowOffset:");
+        if ([layer respondsToSelector:shadowOffsetSelector]) {
+            NSValue *offsetValue = [NSValue valueWithSize:NSMakeSize(0, -5)];
+            [layer performSelector:shadowOffsetSelector withObject:offsetValue];
+        }
     }
 }
 
