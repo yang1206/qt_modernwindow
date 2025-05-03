@@ -1,12 +1,22 @@
 #include "nmainwindow.h"
 
-// 平台特定头文件
+#include <QOperatingSystemVersion>
+
 #ifdef Q_OS_WIN
 #include "windows_effect.h"
 #endif
 
 #ifdef Q_OS_MACOS
 #include "macos_effect.h"
+
+// 前向声明Objective-C类
+#ifdef __OBJC__
+@class NSView;
+@class NSWindow;
+#else
+class NSView;
+class NSWindow;
+#endif
 #endif
 
 NMainWindow::NMainWindow(QWidget *parent)
@@ -38,6 +48,7 @@ void NMainWindow::initPlatformEffect()
 
 #ifdef Q_OS_MACOS
     MacOSEffect::initWindowEffect(this);
+    MacOSEffect::setupWindowStateMonitor(this);
 #endif
 
 #if !defined(Q_OS_WIN) && !defined(Q_OS_MACOS)
@@ -101,4 +112,26 @@ int NMainWindow::getDefaultEffect()
 #endif
 
     return BackdropEffect::None;
+}
+
+void NMainWindow::enableWindowAnimation(bool enable) {
+#ifdef Q_OS_WIN
+    HWND hwnd = reinterpret_cast<HWND>(this->winId());
+    DWORD style = GetWindowLong(hwnd, GWL_STYLE);
+    
+    if (!enable) {
+        style &= ~WS_CAPTION;
+        style &= ~WS_THICKFRAME;
+    } else {
+        style |= WS_CAPTION;
+        style |= WS_THICKFRAME;
+    }
+    
+    SetWindowLong(hwnd, GWL_STYLE, style);
+#endif
+
+#ifdef Q_OS_MACOS
+    // 调用ObjC实现的辅助函数，而不是直接在C++代码中使用ObjC语法
+    MacOSEffect::setWindowAnimationBehavior(this, enable);
+#endif
 }

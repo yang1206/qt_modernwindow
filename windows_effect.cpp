@@ -26,6 +26,14 @@ void WindowsEffect::initWindowEffect(QWidget* window) {
 
     // 扩展窗口框架到客户区
     const HWND hwnd = reinterpret_cast<HWND>(window->winId());
+    
+    // 启用DPI感知
+    EnableNonClientDpiScaling(hwnd);
+    
+    // 尝试启用现代窗口样式
+    BOOL value = TRUE;
+    DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &value, sizeof(value));
+    
     const MARGINS margins = {0, 0, 0, -1}; // -1表示整个客户区
     DwmExtendFrameIntoClientArea(hwnd, &margins);
 }
@@ -74,7 +82,7 @@ bool WindowsEffect::applyAcrylicEffect(QWidget* window) {
     ACCENTPOLICY accent = {
         ACCENT_ENABLE_ACRYLICBLURBEHIND,  // 亚克力模糊
         0,
-        0x80F0F0F0,  // 使用小于INT_MAX的值
+        static_cast<int>(0x80F0F0F0),  // 使用小于INT_MAX的值
         0
     };
 
@@ -136,4 +144,18 @@ bool WindowsEffect::disableWindowEffects(QWidget* window) {
     }
 
     return true;
+}
+
+bool WindowsEffect::enableSnapLayout(QWidget* window, bool enable) {
+    if (!isWindows11OrGreater()) {
+        return false;
+    }
+    
+    const HWND hwnd = reinterpret_cast<HWND>(window->winId());
+    
+    // Windows 11 Snap Layout
+    BOOL value = enable ? TRUE : FALSE;
+    HRESULT hr = DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &value, sizeof(value));
+    
+    return SUCCEEDED(hr);
 }

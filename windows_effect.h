@@ -19,6 +19,7 @@ public:
 
     static void initWindowEffect(QWidget* window);
     static bool setWindowBackdropEffect(QWidget* window, int type);
+    static bool enableSnapLayout(QWidget* window, bool enable);
 
 private:
     static bool applyAcrylicEffect(QWidget* window);

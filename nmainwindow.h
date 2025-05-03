@@ -27,6 +27,8 @@ public:
     // 获取当前效果
     int currentEffect() const;
     
+    void enableWindowAnimation(bool enable);
+    
 protected:
     // 初始化窗口，子类可以重写此方法添加额外初始化
     virtual void initWindow();

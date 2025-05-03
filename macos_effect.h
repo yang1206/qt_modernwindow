@@ -13,4 +13,9 @@ public:
 
     static void initWindowEffect(QWidget* window);
     static bool setWindowBackdropEffect(QWidget* window, int type);
+    static void setWindowCornerRadius(QWidget* window, qreal radius = 10.0);
+    static void addWindowShadowEffect(QWidget* window, qreal shadowRadius = 20.0);
+    static void setWindowAnimationBehavior(QWidget* window, bool enable);
+    static bool isDarkMode();
+    static void setupWindowStateMonitor(QWidget* window);
 };

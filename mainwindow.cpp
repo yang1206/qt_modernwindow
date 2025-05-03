@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include <QVBoxLayout>
 #include <QLabel>
+#include <QOperatingSystemVersion>
 
 MainWindow::MainWindow(QWidget *parent)
     : NMainWindow(parent)
@@ -9,7 +10,7 @@ MainWindow::MainWindow(QWidget *parent)
     // 设置窗口属性
     setWindowTitle(tr("现代窗口示例"));
     resize(800, 600);
-    
+    enableWindowAnimation(true);
     // 设置UI
     setupUI();
 }
