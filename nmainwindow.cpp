@@ -48,12 +48,6 @@ void NMainWindow::initPlatformEffect()
 
 #ifdef Q_OS_MACOS
     MacOSEffect::initWindowEffect(this);
-    MacOSEffect::setupWindowStateMonitor(this);
-#endif
-
-#if !defined(Q_OS_WIN) && !defined(Q_OS_MACOS)
-    // 其他平台的基本设置
-    setStyleSheet("background-color: white;");
 #endif
 }
 
@@ -70,6 +64,25 @@ bool NMainWindow::setBackdropEffect(int effectType)
 
 bool NMainWindow::setPlatformEffect(int type)
 {
+    // 如果是默认样式，恢复Qt原生样式
+    if (type == BackdropEffect::Default) {
+        // 移除所有自定义效果
+#ifdef Q_OS_WIN
+        WindowsEffect::setWindowBackdropEffect(this, WindowsEffect::BackdropType::None);
+#endif
+
+#ifdef Q_OS_MACOS
+        MacOSEffect::setWindowBackdropEffect(this, MacOSEffect::None);
+#endif
+
+        // 移除透明背景属性
+        this->setAttribute(Qt::WA_TranslucentBackground, false);
+        this->setStyleSheet("");  // 清除样式表
+        
+        return true;
+    }
+    
+    // 其余代码保持不变
 #ifdef Q_OS_WIN
     return WindowsEffect::setWindowBackdropEffect(this, type);
 #endif

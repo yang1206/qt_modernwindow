@@ -69,6 +69,7 @@ void MainWindow::setupEffectOptions()
 #ifdef Q_OS_MACOS
     m_effectComboBox->addItem(tr("模糊"), BackdropEffect::Blur);
 #endif
+    m_effectComboBox->addItem(tr("Qt默认"),BackdropEffect::Default);
 
     // 设置当前选项为当前效果
     int currentIndex = m_effectComboBox->findData(currentEffect());

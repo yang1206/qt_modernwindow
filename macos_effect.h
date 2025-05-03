@@ -17,5 +17,4 @@ public:
     static void addWindowShadowEffect(QWidget* window, qreal shadowRadius = 20.0);
     static void setWindowAnimationBehavior(QWidget* window, bool enable);
     static bool isDarkMode();
-    static void setupWindowStateMonitor(QWidget* window);
 };
