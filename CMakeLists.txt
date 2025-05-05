@@ -28,19 +28,6 @@ if(WIN32)
     )
 endif()
 
-if(APPLE)
-    enable_language(OBJCXX)
-    # Objective-C++文件集成
-    set_source_files_properties(
-        macos_effect.mm
-        PROPERTIES LANGUAGE OBJCXX
-    )
-    list(APPEND PROJECT_SOURCES
-        macos_effect.mm
-        macos_effect.h
-    )
-endif()
-
 # 创建可执行文件
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
 
@@ -50,8 +37,4 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets)
 # 平台特定链接
 if(WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE dwmapi user32 uxtheme)
-endif()
-
-if(APPLE)
-    target_link_libraries(${PROJECT_NAME} PRIVATE "-framework Cocoa" "-framework AppKit")
 endif()

@@ -50,16 +50,25 @@ void MainWindow::setupUI()
         QLabel {
             color: rgba(0, 0, 0, 200);
             background-color: transparent;
+            font-size: 14px;
+            font-weight: bold;
         }
         QComboBox {
             background-color: rgba(255, 255, 255, 0.2);
             color: rgba(0, 0, 0, 200);
             border: 1px solid rgba(0, 0, 0, 60);
             border-radius: 4px;
-            padding: 2px;
+            padding: 4px;
+            min-height: 24px;
+        }
+        QComboBox::drop-down {
+            border: none;
+        }
+        QComboBox::down-arrow {
+            width: 14px;
+            height: 14px;
         }
     )";
-
 
     centralWidget->setStyleSheet(styleSheet);
 }
@@ -70,7 +79,7 @@ void MainWindow::setupEffectOptions()
     
     // 添加所有平台都支持的效果
     m_effectComboBox->addItem(tr("无效果"), BackdropEffect::None);
-
+    
 #ifdef Q_OS_WIN
     bool isWin11 = QOperatingSystemVersion::current() >=
                    QOperatingSystemVersion(QOperatingSystemVersion::Windows, 10, 0, 22000);
@@ -85,9 +94,7 @@ void MainWindow::setupEffectOptions()
     m_effectComboBox->addItem(tr("亚克力"), BackdropEffect::Acrylic);
 #endif
 
-#ifdef Q_OS_MACOS
-    m_effectComboBox->addItem(tr("模糊"), BackdropEffect::Blur);
-#endif
+    // 移除macOS特定选项
 
     // 设置当前选项为当前效果
     int currentIndex = m_effectComboBox->findData(currentEffect());

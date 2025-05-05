@@ -80,3 +80,12 @@ CMakeLists.txt.user*
 .rcc/
 .uic/
 /build*/
+cmake-build-debug/
+cmake-build-release/
+cmake-build-debug-x86_64/
+cmake-build-release-x86_64/
+cmake-build-debug-arm64/
+cmake-build-release-arm64/
+
+.idea/
+

@@ -6,19 +6,6 @@
 #include "windows_effect.h"
 #endif
 
-#ifdef Q_OS_MACOS
-#include "macos_effect.h"
-
-// 前向声明Objective-C类
-#ifdef __OBJC__
-@class NSView;
-@class NSWindow;
-#else
-class NSView;
-class NSWindow;
-#endif
-#endif
-
 NMainWindow::NMainWindow(QWidget *parent)
     : QMainWindow(parent)
     , m_currentEffect(BackdropEffect::None)
@@ -45,10 +32,7 @@ void NMainWindow::initPlatformEffect()
 #ifdef Q_OS_WIN
     WindowsEffect::initWindowEffect(this);
 #endif
-
-#ifdef Q_OS_MACOS
-    MacOSEffect::initWindowEffect(this);
-#endif
+    // 其他平台不需要特殊初始化
 }
 
 bool NMainWindow::setBackdropEffect(int effectType)
@@ -65,27 +49,12 @@ bool NMainWindow::setBackdropEffect(int effectType)
 bool NMainWindow::setPlatformEffect(int type)
 {
 #ifdef Q_OS_WIN
+    // Windows平台使用特殊效果
     return WindowsEffect::setWindowBackdropEffect(this, type);
+#else
+    // 其他平台直接忽略效果设置，返回成功
+    return true;
 #endif
-
-#ifdef Q_OS_MACOS
-    // 修复macOS的反向类型映射问题
-    int macOSType;
-    switch (type) {
-        case BackdropEffect::None:
-            macOSType = MacOSEffect::None;
-            break;
-        case BackdropEffect::Blur:
-            macOSType = MacOSEffect::Blur;
-            break;
-        default:
-            macOSType = MacOSEffect::None;
-    }
-    return MacOSEffect::setWindowBackdropEffect(this, macOSType);
-#endif
-
-    // 其他平台不支持特殊效果
-    return false;
 }
 
 int NMainWindow::currentEffect() const
@@ -99,13 +68,10 @@ int NMainWindow::getDefaultEffect()
     bool isWin11 = QOperatingSystemVersion::current() >=
                    QOperatingSystemVersion(QOperatingSystemVersion::Windows, 10, 0, 22000);
     return isWin11 ? BackdropEffect::Mica : BackdropEffect::Acrylic;
-#endif
-
-#ifdef Q_OS_MACOS
+#else
+    // 其他平台默认无效果
     return BackdropEffect::None;
 #endif
-
-    return BackdropEffect::None;
 }
 
 void NMainWindow::enableWindowAnimation(bool enable) {
@@ -123,9 +89,5 @@ void NMainWindow::enableWindowAnimation(bool enable) {
 
     SetWindowLong(hwnd, GWL_STYLE, style);
 #endif
-
-#ifdef Q_OS_MACOS
-    // 调用ObjC实现的辅助函数，而不是直接在C++代码中使用ObjC语法
-    MacOSEffect::setWindowAnimationBehavior(this, enable);
-#endif
+    // 其他平台不进行特殊处理
 }
